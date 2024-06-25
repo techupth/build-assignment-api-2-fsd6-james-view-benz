@@ -1,5 +1,6 @@
 import express from "express";
 import connectionPool from "./utils/db.mjs";
+import "dotenv/config";
 
 const app = express();
 const port = 4001;
@@ -13,14 +14,15 @@ app.get("/assignments", async (req, res) => {
   let result;
   try {
     result = await connectionPool.query(`select * from assignments`);
-  } catch {
+  } catch (error) {
+    console.error("Error:", error.message);
     return res.status(500).json({
-      message: `Server could not create assignment because database connection`,
+      message: `Server could not read assignment because database connection`,
     });
   }
 
   return res.status(200).json({
-    data: result.rows[0],
+    data: result.rows,
   });
 });
 app.get("/assignments/:assignmentId", async (req, res) => {
@@ -31,11 +33,13 @@ app.get("/assignments/:assignmentId", async (req, res) => {
       `select * from assignments where assignment_id=$1`,
       [assignmentIdFromClient]
     );
-  } catch {
+  } catch (error) {
+    console.error("Error:", error.message);
     return res.status(500).json({
-      message: `Server could not create assignment because database connection`,
+      message: `Server could not read assignment because database connection`,
     });
   }
+
   if (!result.rows[0]) {
     return res
       .status(404)
@@ -63,11 +67,13 @@ app.put("/assignments/:assignmentId", async (req, res) => {
         updateAssignment.category,
       ]
     );
-  } catch {
+  } catch (error) {
+    console.error("Error:", error.message);
     return res.status(500).json({
-      message: "Server could not update assignment due to database error",
+      message: "Server could not update assignment because database connection",
     });
   }
+  //console.log(result.rows === 0);
   if (result.rows === 0) {
     return res.status(404).json({
       message: "Server could not find a requested assignment to update",
@@ -84,7 +90,8 @@ app.delete("/assignments/:assignmentId", async (req, res) => {
       `delete from assignments where assignment_id=$1`,
       [assignmentIdFromClient]
     );
-  } catch {
+  } catch (error) {
+    console.error("Error:", error.message);
     return res.status(500).json({
       message: "Server could not delete assignment because database connection",
     });
